@@ -115,7 +115,7 @@ int getDimY () {
         return (rank-1)/PITON_X_TILES;
 }
 
-int getRankN () {
+int getRankN () { // isn't north and south are reverse here ?
     if (tile_y == 0)
         return -1;
     else
