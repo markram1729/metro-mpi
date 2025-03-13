@@ -12,7 +12,7 @@ if [ -z $1]
 then
 	usage
 else
-	make X_TILE="$1" Y_TILE="$2" rule$3
+	make X_TILE="$1" Y_TILE="$2" rule$3 ARGS=$4
 	cat fake_uart.log
 fi
 

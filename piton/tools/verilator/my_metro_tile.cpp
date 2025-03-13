@@ -119,7 +119,7 @@ int getRankN () { // isn't north and south are reverse here ?
     if (tile_y == 0)
         return -1;
     else
-        return get_rank_fromXY(tile_x, tile_y-1);
+        return get_rank_fromXY(tile_x, tile_y-1); // get_rank_fromXY(tile_x,tile_y+1);
 }
 
 int getRankS () {
