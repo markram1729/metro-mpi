@@ -606,7 +606,6 @@ int main(int argc, char **argv, char **env) {
     rankW  = getRankW();
     rankE  = getRankE();
 
-#ifdef VERILATOR_VCD
     std::cout << "TILE size: " << size << ", rank: " << rank <<  std::endl;
     std::cout << "tile_y: " << tile_y << std::endl;
     std::cout << "tile_x: " << tile_x << std::endl;
@@ -614,7 +613,6 @@ int main(int argc, char **argv, char **env) {
     std::cout << "rankS: " << rankS << std::endl;
     std::cout << "rankW: " << rankW << std::endl;
     std::cout << "rankE: " << rankE << std::endl;
-#endif
 
     top->default_chipid = 0;
     top->default_coreid_x = tile_x;
