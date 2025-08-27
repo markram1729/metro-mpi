@@ -21,12 +21,11 @@ const int ALL_YUMMY    = 8;
 const int ALL_NOC      = 9;
 
 
-chipset_
 uint64_t chipset_main_time = 0; // Current simulation time
 uint64_t chipset_clk = 0;
 Vmetro_chipset* chipset_top;
-int chipset_rank, chipset_dest, chipset_size;
-short chipset_test_end=0;
+int rank, dest, size;
+short test_end=0;
 
 void initialize();
 
@@ -68,16 +67,16 @@ return chipset_main_time; // converts to double, to match
 // what SystemC does
 }
 
-void tick() {
-    chipset_tile_top->core_ref_clk = !chipset_tile_top->core_ref_clk;
+void chipset_tick() {
+    chipset_top->core_ref_clk = !chipset_top->core_ref_clk;
     chipset_main_time += 250;
-    chipset_tile_top->eval();
+    chipset_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(main_time);
 #endif
-    chipset_tile_top->core_ref_clk = !chipset_tile_top->core_ref_clk;
+    chipset_top->core_ref_clk = !chipset_top->core_ref_clk;
     chipset_main_time += 250;
-    chipset_tile_top->eval();
+    chipset_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(chipset_main_time);
 #endif
@@ -85,18 +84,18 @@ void tick() {
 
 void mpi_work_opt_4_chipset() {
     
-    chipset_test_end = chipset_test_end or (chipset_tile_top->good_end==1 or chipset_tile_top->bad_end==1);
+    test_end = test_end or (chipset_top->good_end==1 or chipset_top->bad_end==1);
 
     mpi_all_t message;
-    message.data_0  = chipset_tile_top->offchip_processor_noc1_data;
-    message.valid_0 = chipset_tile_top->offchip_processor_noc1_valid;
-    message.data_1  = chipset_tile_top->offchip_processor_noc2_data;
-    message.valid_1 = chipset_tile_top->offchip_processor_noc2_valid;
-    message.data_2  = chipset_tile_top->offchip_processor_noc3_data;
-    message.valid_2 = chipset_tile_top->offchip_processor_noc3_valid;
-    message.yummy_0 = chipset_tile_top->processor_offchip_noc1_yummy;
-    message.yummy_1 = chipset_tile_top->processor_offchip_noc2_yummy;
-    message.yummy_2 = chipset_tile_top->processor_offchip_noc3_yummy;
+    message.data_0  = chipset_top->offchip_processor_noc1_data;
+    message.valid_0 = chipset_top->offchip_processor_noc1_valid;
+    message.data_1  = chipset_top->offchip_processor_noc2_data;
+    message.valid_1 = chipset_top->offchip_processor_noc2_valid;
+    message.data_2  = chipset_top->offchip_processor_noc3_data;
+    message.valid_2 = chipset_top->offchip_processor_noc3_valid;
+    message.yummy_0 = chipset_top->processor_offchip_noc1_yummy;
+    message.yummy_1 = chipset_top->processor_offchip_noc2_yummy;
+    message.yummy_2 = chipset_top->processor_offchip_noc3_yummy;
 
     // send data
     mpi_send_all(message, dest, rank, ALL_NOC);
@@ -104,33 +103,33 @@ void mpi_work_opt_4_chipset() {
     // receive data
     mpi_all_t all_response = mpi_receive_all(dest, ALL_NOC);
     
-    chipset_tile_top->processor_offchip_noc1_data  = all_response.data_0; 
-    chipset_tile_top->processor_offchip_noc1_valid = all_response.valid_0;
-    chipset_tile_top->processor_offchip_noc2_data  = all_response.data_1; 
-    chipset_tile_top->processor_offchip_noc2_valid = all_response.valid_1;
-    chipset_tile_top->processor_offchip_noc3_data  = all_response.data_2; 
-    chipset_tile_top->processor_offchip_noc3_valid = all_response.valid_2;
-    chipset_tile_top->offchip_processor_noc1_yummy = all_response.yummy_0;
-    chipset_tile_top->offchip_processor_noc2_yummy = all_response.yummy_1;
-    chipset_tile_top->offchip_processor_noc3_yummy = all_response.yummy_2;
+    chipset_top->processor_offchip_noc1_data  = all_response.data_0; 
+    chipset_top->processor_offchip_noc1_valid = all_response.valid_0;
+    chipset_top->processor_offchip_noc2_data  = all_response.data_1; 
+    chipset_top->processor_offchip_noc2_valid = all_response.valid_1;
+    chipset_top->processor_offchip_noc3_data  = all_response.data_2; 
+    chipset_top->processor_offchip_noc3_valid = all_response.valid_2;
+    chipset_top->offchip_processor_noc1_yummy = all_response.yummy_0;
+    chipset_top->offchip_processor_noc2_yummy = all_response.yummy_1;
+    chipset_top->offchip_processor_noc3_yummy = all_response.yummy_2;
 }
 
 
 void chipset_mpi_tick() {
-    chipset_tile_top->core_ref_clk = !chipset_tile_top->core_ref_clk;
+    chipset_top->core_ref_clk = !chipset_top->core_ref_clk;
     chipset_main_time += 250;
-    chipset_tile_top->eval();
+    chipset_top->eval();
 #ifdef MPI_OPT_4
     mpi_work_opt_4_chipset();
 #endif
     // Do MPI
-    chipset_tile_top->eval();
+    chipset_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(main_time);
 #endif
-    chipset_tile_top->core_ref_clk = !chipset_tile_top->core_ref_clk;
+    chipset_top->core_ref_clk = !chipset_top->core_ref_clk;
     chipset_main_time += 250;
-    chipset_tile_top->eval();
+    chipset_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(chipset_main_time);
 #endif
@@ -143,20 +142,20 @@ void reset_and_init() {
     //    stub_pass = 4'b0;
 
     // Clocks initial value
-    chipset_tile_top->core_ref_clk = 0;
+    chipset_top->core_ref_clk = 0;
 
     // Resets are held low at start of boot
-    chipset_tile_top->sys_rst_n = 0;
-    chipset_tile_top->pll_rst_n = 0;
+    chipset_top->sys_rst_n = 0;
+    chipset_top->pll_rst_n = 0;
 
-    chipset_tile_top->ok_iob = 0;
+    chipset_top->ok_iob = 0;
 
     // Mostly DC signals set at start of boot
     //    clk_en = 1'b0;
-    chipset_tile_top->pll_bypass = 1; // trin: pll_bypass is a switch in the pll; not reliable
-    chipset_tile_top->clk_mux_sel = 0; // selecting ref clock
+    chipset_top->pll_bypass = 1; // trin: pll_bypass is a switch in the pll; not reliable
+    chipset_top->clk_mux_sel = 0; // selecting ref clock
     // rangeA = x10 ? 5'b1 : x5 ? 5'b11110 : x2 ? 5'b10100 : x1 ? 5'b10010 : x20 ? 5'b0 : 5'b1;
-    chipset_tile_top->pll_rangea = 1; // 10x ref clock
+    chipset_top->pll_rangea = 1; // 10x ref clock
     // pll_rangea = 5'b11110; // 5x ref clock
     // pll_rangea = 5'b00000; // 20x ref clock
     
@@ -164,20 +163,20 @@ void reset_and_init() {
     //    jtag_modesel = 1'b1;
     //    jtag_datain = 1'b0;
 
-    chipset_tile_top->async_mux = 0;
+    chipset_top->async_mux = 0;
 
-    chipset_tile_top->processor_offchip_noc1_valid = 0;
-    chipset_tile_top->processor_offchip_noc1_data  = 0;
-    chipset_tile_top->offchip_processor_noc1_yummy = 0;
-    chipset_tile_top->processor_offchip_noc2_valid = 0;
-    chipset_tile_top->processor_offchip_noc2_data  = 0;
-    chipset_tile_top->offchip_processor_noc2_yummy = 0;
-    chipset_tile_top->processor_offchip_noc3_valid = 0;
-    chipset_tile_top->processor_offchip_noc3_data  = 0;
-    chipset_tile_top->offchip_processor_noc3_yummy = 0;
-    chipset_tile_top->test_ena = 0;
+    chipset_top->processor_offchip_noc1_valid = 0;
+    chipset_top->processor_offchip_noc1_data  = 0;
+    chipset_top->offchip_processor_noc1_yummy = 0;
+    chipset_top->processor_offchip_noc2_valid = 0;
+    chipset_top->processor_offchip_noc2_data  = 0;
+    chipset_top->offchip_processor_noc2_yummy = 0;
+    chipset_top->processor_offchip_noc3_valid = 0;
+    chipset_top->processor_offchip_noc3_data  = 0;
+    chipset_top->offchip_processor_noc3_yummy = 0;
+    chipset_top->test_ena = 0;
 
-    chipset_test_end=0;
+    test_end=0;
 
     init_jbus_model_call((char *) "mem.image", 0);
 
@@ -190,12 +189,12 @@ void reset_and_init() {
     for (int i = 0; i < 100; i++) {
         chipset_tick();
     }
-    chipset_tile_top->pll_rst_n = 1;
+    chipset_top->pll_rst_n = 1;
 
     //std::cout << "Before second ticks" << std::endl << std::flush;
     // Wait for PLL lock
     //    wait( pll_lock == 1'b1 );
-    //while (!chipset_tile_top->pll_lock) {
+    //while (!chipset_top->pll_lock) {
     //    tick();
     //}
 
@@ -206,7 +205,7 @@ void reset_and_init() {
     for (int i = 0; i < 10; i++) {
         chipset_tick();
     }
-    chipset_tile_top->clk_en = 1;
+    chipset_top->clk_en = 1;
 
     // After 100 cycles release reset
     //    repeat(100)@(posedge `CHIP_INT_CLK);
@@ -215,7 +214,7 @@ void reset_and_init() {
     for (int i = 0; i < 100; i++) {
         chipset_tick();
     }
-    chipset_tile_top->sys_rst_n = 1;
+    chipset_top->sys_rst_n = 1;
 
     // Wait for SRAM init, trin: 5000 cycles is about the lowest
     //    repeat(5000)@(posedge `CHIP_INT_CLK);
@@ -223,10 +222,10 @@ void reset_and_init() {
         chipset_tick();
     }
 
-    //    chipset_tile_top->diag_done = 1;
+    //    chipset_top->diag_done = 1;
 
-    //chipset_tile_top->ciop_fake_iob.ok_iob = 1;
-    chipset_tile_top->ok_iob = 1;
+    //chipset_top->ciop_fake_iob.ok_iob = 1;
+    chipset_top->ok_iob = 1;
     std::cout << "Reset complete (Chipset)" << std::endl << std::flush;
 }
 
@@ -240,7 +239,7 @@ int chipset_main(int argc,char *argv[],char **env)
 #ifdef VERILATOR_VCD
     Verilated::traceEverOn(true);
     tfp = new VerilatedVcdC;
-    chipset_tile_top->trace (tfp, 99);
+    chipset_top->trace (tfp, 99);
     tfp->open ("my_metro_chipset.vcd");
 
     Verilated::debug(1);
@@ -261,20 +260,20 @@ int chipset_main(int argc,char *argv[],char **env)
 
     reset_and_init();
 
-    chipset_tile_top->test_ena = 1;
+    chipset_top->test_ena = 1;
 
     bool test_exit = false;
-    uint64_t chipset_cyclesToCheckEnd=std::stoi(argv[1]);
-    uint64_t chipset_CyclesToCheckEndAfter=std::stoi(argv[2]);
+    uint64_t cyclesToCheckEnd=std::stoi(argv[1]);
+    uint64_t CyclesToCheckEndAfter=std::stoi(argv[2]);
     while (!Verilated::gotFinish() and !test_exit) { 
         chipset_mpi_tick();
         if (cyclesToCheckEnd==0) {
             mpi_send_finish(test_end, rank);
-            chipset_cyclesToCheckEnd=chipset_CyclesToCheckEndAfter;
-            chipset_test_exit=chipset_test_end;
+           cyclesToCheckEnd=CyclesToCheckEndAfter;
+           test_exit=test_end;
         }
         else {
-            chipset_cyclesToCheckEnd--;
+            cyclesToCheckEnd--;
         }
     }
 
@@ -288,5 +287,5 @@ int chipset_main(int argc,char *argv[],char **env)
     finalize();
 
     delete chipset_top;
-
+    return 0;
 }

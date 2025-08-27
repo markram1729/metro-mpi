@@ -1,15 +1,16 @@
 #include <iostream>
-#include <omp>
+#include <omp.h>
+#include <mpi.h>
+#include "verilated.h"
 
-
-int chipset_main(argc,argv);
-int tile_main(argc,argv);
+int chipset_main(int argc,char **argv);
+int tile_main(int argc,char **argv);
 
 int main(int argc, char **argv, char **env) {
     Verilated::commandArgs(argc, argv);
    
-   int provided 
-    MPI_Init_thread(argc,**argv, MPI_THREAD_MULTIPLE, &provided );
+   int provided ,rank;
+    MPI_Init_thread(&argc,&argv, MPI_THREAD_MULTIPLE, &provided );
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 

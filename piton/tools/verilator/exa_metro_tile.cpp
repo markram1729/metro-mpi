@@ -21,6 +21,16 @@ int tile_rank, tile_dest, tile_size;
 int rankN, rankS, rankW, rankE;
 int tile_x, tile_y;//, PITON_X_TILES, PITON_Y_TILES;
 
+const int YUMMY_NOC_1  = 0;
+const int DATA_NOC_1   = 1;
+const int YUMMY_NOC_2  = 2;
+const int DATA_NOC_2   = 3;
+const int YUMMY_NOC_3  = 4;
+const int DATA_NOC_3   = 5;
+const int TEST_FINISH  = 6;
+const int DATA_ALL_NOC = 7;
+const int ALL_YUMMY    = 8;
+const int ALL_NOC      = 9;
 void initialize();
 
 int getRank();
@@ -33,6 +43,17 @@ unsigned short mpi_receive_finish();
 
 void mpi_send_finish(unsigned short message, int rank);
 
+typedef struct {
+    unsigned long long data_0;
+    unsigned long long data_1;
+    unsigned long long data_2;
+    unsigned short valid_0;
+    unsigned short valid_1;
+    unsigned short valid_2;
+    unsigned short yummy_0;
+    unsigned short yummy_1;
+    unsigned short yummy_2;
+} mpi_all_t;
 
 // MPI Send 3 NoC messages
 void mpi_send_all(mpi_all_t message, int dest, int rank, int flag);
@@ -55,17 +76,17 @@ int get_rank_fromXY(int x, int y) {
 
 // MPI ID funcitons
 int getDimX () {
-    if (rank==0) // Should never happen
+    if (tile_rank==0) // Should never happen
         return 0;
     else
-        return (rank-1)%PITON_X_TILES;
+        return (tile_rank-1)%PITON_X_TILES;
 }
 
 int getDimY () {
-    if (rank==0) // Should never happen
+    if (tile_rank==0) // Should never happen
         return 0;
     else
-        return (rank-1)/PITON_X_TILES;
+        return (tile_rank-1)/PITON_X_TILES;
 }
 
 int getRankN () { // isn't north and south are reverse here ?
@@ -90,7 +111,7 @@ int getRankE () {
 }
 
 int getRankW () {
-    if (rank==1) { // go to chipset
+    if (tile_rank==1) { // go to chipset
         return 0;
     }
     else if (tile_x == 0) {
@@ -102,15 +123,15 @@ int getRankW () {
 }
 
 void tile_tick() {
-    tile_tile_top->core_ref_clk = !tile_tile_top->core_ref_clk;
+    tile_top->core_ref_clk = !tile_top->core_ref_clk;
     tile_main_time += 250;
-    tile_tile_top->eval();
+    tile_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(tile_main_time);
 #endif
-    tile_tile_top->core_ref_clk = !tile_tile_top->core_ref_clk;
+    tile_top->core_ref_clk = !tile_top->core_ref_clk;
     tile_main_time += 250;
-    tile_tile_top->eval();
+    tile_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(main_time);
 #endif
@@ -130,20 +151,20 @@ void mpi_work_opt_4_N() {
     message.yummy_2 =tile_top->out_N_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankN, rank, ALL_NOC);
+    mpi_send_all(message, rankN, tile_rank, ALL_NOC);
         
     // receive data
     mpi_all_t all_response = mpi_receive_all(rankN, ALL_NOC);
 
-    tile_op->in_N_noc1_data  = all_response.data_0; 
-    tile_op->in_N_noc1_valid = all_response.valid_0;
-    tile_op->in_N_noc2_data  = all_response.data_1; 
-    tile_op->in_N_noc2_valid = all_response.valid_1;
-    tile_op->in_N_noc3_data  = all_response.data_2; 
-    tile_op->in_N_noc3_valid = all_response.valid_2;
-    tile_op->in_N_noc1_yummy = all_response.yummy_0;
-    tile_op->in_N_noc2_yummy = all_response.yummy_1;
-    tile_op->in_N_noc3_yummy = all_response.yummy_2;
+    tile_top->in_N_noc1_data  = all_response.data_0; 
+    tile_top->in_N_noc1_valid = all_response.valid_0;
+    tile_top->in_N_noc2_data  = all_response.data_1; 
+    tile_top->in_N_noc2_valid = all_response.valid_1;
+    tile_top->in_N_noc3_data  = all_response.data_2; 
+    tile_top->in_N_noc3_valid = all_response.valid_2;
+    tile_top->in_N_noc1_yummy = all_response.yummy_0;
+    tile_top->in_N_noc2_yummy = all_response.yummy_1;
+    tile_top->in_N_noc3_yummy = all_response.yummy_2;
     
 }
 
@@ -161,7 +182,7 @@ void mpi_work_opt_4_S() {
     message.yummy_2 = tile_top->out_S_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankS, rank, ALL_NOC);
+    mpi_send_all(message, rankS, tile_rank, ALL_NOC);
         
     // receive data
     mpi_all_t all_response = mpi_receive_all(rankS, ALL_NOC);
@@ -191,7 +212,7 @@ void mpi_work_opt_4_E() {
     message.yummy_2 = tile_top->out_E_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankE, rank, ALL_NOC);
+    mpi_send_all(message, rankE, tile_rank, ALL_NOC);
     // receive data
     mpi_all_t all_response = mpi_receive_all(rankE, ALL_NOC);
     
@@ -221,7 +242,7 @@ void mpi_work_opt_4_W() {
     message.yummy_2 = tile_top->out_W_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankW, rank, ALL_NOC);
+    mpi_send_all(message, rankW, tile_rank, ALL_NOC);
         
     // receive data
     mpi_all_t all_response = mpi_receive_all(rankW, ALL_NOC);
@@ -252,7 +273,7 @@ void mpi_work_opt_4_send_N() {
     message.yummy_2 = tile_top->out_N_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankN, rank, ALL_NOC);
+    mpi_send_all(message, rankN, tile_rank, ALL_NOC);
 }
 
 void mpi_work_opt_4_recv_N() {       
@@ -285,7 +306,7 @@ void mpi_work_opt_4_send_S() {
     message.yummy_2 = tile_top->out_S_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankS, rank, ALL_NOC);
+    mpi_send_all(message, rankS, tile_rank, ALL_NOC);
 
 }
 
@@ -318,7 +339,7 @@ void mpi_work_opt_4_send_E() {
     message.yummy_2 = tile_top->out_E_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankE, rank, ALL_NOC);
+    mpi_send_all(message, rankE, tile_rank, ALL_NOC);
 }
 
 void mpi_work_opt_4_recv_E() {    
@@ -350,7 +371,7 @@ void mpi_work_opt_4_send_W() {
     message.yummy_2 = tile_top->out_W_noc3_yummy;
 
     // send data
-    mpi_send_all(message, rankW, rank, ALL_NOC);
+    mpi_send_all(message, rankW, tile_rank, ALL_NOC);
 }
 
 void mpi_work_opt_4_recv_W() {
@@ -373,7 +394,7 @@ void mpi_work_opt_4_recv_W() {
 
 void mpi_tick() {
     tile_top->core_ref_clk = !tile_top->core_ref_clk;
-    main_time += 250;
+    tile_main_time += 250;
     tile_top->eval();
 #ifdef MPI_OPT_4
     // First, we do the sends
@@ -393,7 +414,7 @@ void mpi_tick() {
     tfp->dump(main_time);
 #endif
     tile_top->core_ref_clk = !tile_top->core_ref_clk;
-    main_time += 250;
+    tile_main_time += 250;
     tile_top->eval();
 #ifdef VERILATOR_VCD
     tfp->dump(main_time);
@@ -559,7 +580,7 @@ int tile_main(int argc, char **argv, char **env) {
     rankW  = getRankW();
     rankE  = getRankE();
 
-    std::cout << "TILE size: " << size << ", rank: " << rank <<  std::endl;
+    std::cout << "TILE size: " << tile_size << ", rank: " << tile_rank <<  std::endl;
     std::cout << "tile_y: " << tile_y << std::endl;
     std::cout << "tile_x: " << tile_x << std::endl;
     std::cout << "rankN: " << rankN << std::endl;
@@ -570,7 +591,7 @@ int tile_main(int argc, char **argv, char **env) {
     tile_top->default_chipid = 0;
     tile_top->default_coreid_x = tile_x;
     tile_top->default_coreid_y = tile_y;
-    tile_top->flat_tileid = rank-1;
+    tile_top->flat_tileid = tile_rank-1;
 
     reset_and_init();
 
@@ -579,12 +600,12 @@ int tile_main(int argc, char **argv, char **env) {
     uint64_t tile_CyclesToCheckEndAfter=std::stoi(argv[2]);
     while (!Verilated::gotFinish() and !test_exit) { 
         mpi_tick();
-        if (cyclesToCheckEnd==0) {
+        if (tile_cyclesToCheckEnd==0) {
             test_exit= mpi_receive_finish();
-            cyclesToCheckEnd=CyclesToCheckEndAfter;
+            tile_cyclesToCheckEnd=tile_CyclesToCheckEndAfter;
         }
         else {
-            cyclesToCheckEnd--;
+            tile_cyclesToCheckEnd--;
         }
     }
     std::cout << "ticks: " << std::setprecision(10) << sc_time_stamp() << " , cycles: " << sc_time_stamp()/500 << std::endl;
