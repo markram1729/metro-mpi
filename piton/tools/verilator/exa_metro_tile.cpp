@@ -421,7 +421,7 @@ void mpi_tick() {
 #endif
 }
 
-void reset_and_init() {
+void tile_reset_and_init() {
     
     // fail_flag = 1'b0;
     // stub_done = 4'b0;
@@ -543,7 +543,7 @@ void reset_and_init() {
     //std::cout << "Reset complete" << std::endl << std::flush;
 }
 
-int tile_main(int argc, char **argv, char **env) {
+int tile_main(int argc, char **argv ) {
     Verilated::commandArgs(argc, argv);
 
     tile_top = new Vmetro_tile;
@@ -593,7 +593,7 @@ int tile_main(int argc, char **argv, char **env) {
     tile_top->default_coreid_y = tile_y;
     tile_top->flat_tileid = tile_rank-1;
 
-    reset_and_init();
+    tile_reset_and_init();
 
     bool test_exit = false;
     uint64_t tile_cyclesToCheckEnd=std::stoi(argv[1]);

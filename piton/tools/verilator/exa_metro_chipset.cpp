@@ -230,7 +230,7 @@ void reset_and_init() {
 }
 
 
-int chipset_main(int argc,char *argv[],char **env)
+int chipset_main(int argc,char *argv[])
 {
     chipset_top = new Vmetro_chipset;
 
