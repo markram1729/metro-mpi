@@ -23,3 +23,6 @@
     - each tile has its neighbours that will be communicating 
     - E W N S 
 
+- One Chipset 
+    - N tiles 
+    - Tile to tile communication using openmp!!
